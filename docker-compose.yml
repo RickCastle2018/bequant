@@ -12,7 +12,7 @@ services:
     ports:
       - 6033:3306
     volumes:
-      - ./db:/var/lib/mysql
+      - ./db/data:/var/lib/mysql
     # restart: unless-stopped
 
   distributor:
