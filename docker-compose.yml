@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+
+  db:
+    image: mysql:8
+    container_name: db
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_USER_PASSWORD}
+    ports:
+      - 6033:3306
+    volumes:
+      - ./db:/var/lib/mysql
+    # restart: unless-stopped
+
+  distributor:
+    container_name: distributor
+    build:
+        context: .
+        dockerfile: ./distributor/Dockerfile
+    ports:
+        - 80:2311
+    # restart: unless-stopped
+    depends_on:
+        - db
+
+  warden:
+    container_name: warden
+    build:
+      context: .
+      dockerfile: ./warden/Dockerfile
+    # restart: unless-stopped
+    depends_on:
+      - db
