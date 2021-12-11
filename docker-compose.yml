@@ -18,19 +18,30 @@ services:
   distributor:
     container_name: distributor
     build:
-        context: .
-        dockerfile: ./distributor/Dockerfile
+      context: .
+      dockerfile: ./distributor/Dockerfile
+    DB_NAME: ${DB_NAME}
+    DB_USER: ${DB_USER}
+    DB_USER_PASSWORD: ${DB_USER_PASSWORD}
     ports:
-        - 80:2311
+      - 8080:8080
     # restart: unless-stopped
     depends_on:
-        - db
+      - db
 
   warden:
     container_name: warden
     build:
       context: .
       dockerfile: ./warden/Dockerfile
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_USER_PASSWORD: ${DB_USER_PASSWORD}
+      API_URL: ${API_URL}
+      UPDATE_INTERVAL: ${UPDATE_INTERVAL}
+      FSYMS: ${FSYMS}
+      TSYMS: ${TSYMS}
     # restart: unless-stopped
     depends_on:
       - db

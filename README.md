@@ -2,7 +2,7 @@
 
 ## How to use:
 
-Simply type `docker-compose up` in terminal while in project's directory.
+Simply type `docker-compose up -d --build db warden distributor` in terminal while in project's directory.
 MySQL, Warden (updates data) and Distributor (provides API) will be started.
 Access API at `localhost:2311`.
 

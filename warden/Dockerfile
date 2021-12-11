@@ -8,6 +8,9 @@ ENV CMD_PATH main.go
 
 # Copy application data into image
 COPY ./warden $GOPATH/src/$APP_NAME
+COPY go.mod $GOPATH/src/$APP_NAME
+COPY go.sum $GOPATH/src/$APP_NAME
+
 WORKDIR $GOPATH/src/$APP_NAME
 
 # Budild application

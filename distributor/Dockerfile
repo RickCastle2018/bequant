@@ -8,6 +8,9 @@ ENV CMD_PATH main.go
 
 # Copy application data into image
 COPY ./distributor $GOPATH/src/$APP_NAME
+COPY go.mod $GOPATH/src/$APP_NAME
+COPY go.sum $GOPATH/src/$APP_NAME
+
 WORKDIR $GOPATH/src/$APP_NAME
 
 # Budild application
@@ -23,7 +26,7 @@ ENV APP_NAME distributor
 COPY --from=build-env /$APP_NAME .
 
 # Expose application port
-EXPOSE 80
+EXPOSE 8080
 
 # Start app
 CMD ./$APP_NAME
