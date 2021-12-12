@@ -71,6 +71,66 @@ JSON Response:
 Make an API cacher, I would say. We have Cryptocompare API and the task is to make
 microservice which stores API answers and provides it's own API to get this data.
 
+## Load testing
+
+```
+> ab -n 100000 -c 10 'http://localhost:8080/price?fsyms=BTC&tsyms=USD'
+
+This is ApacheBench, Version 2.3 <$Revision: 1879490 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 10000 requests
+Completed 20000 requests
+Completed 30000 requests
+Completed 40000 requests
+Completed 50000 requests
+Completed 60000 requests
+Completed 70000 requests
+Completed 80000 requests
+Completed 90000 requests
+Completed 100000 requests
+Finished 100000 requests
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8080
+
+Document Path:          /price?fsyms=BTC&tsyms=USD
+Document Length:        584 bytes
+
+Concurrency Level:      10
+Time taken for tests:   9.498 seconds
+Complete requests:      100000
+Failed requests:        0
+Total transferred:      69300000 bytes
+HTML transferred:       58400000 bytes
+Requests per second:    10528.45 [#/sec] (mean)
+Time per request:       0.950 [ms] (mean)
+Time per request:       0.095 [ms] (mean, across all concurrent requests)
+Transfer rate:          7125.21 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.1      0       1
+Processing:     0    1   0.3      1       9
+Waiting:        0    1   0.3      1       8
+Total:          0    1   0.3      1       9
+
+Percentage of the requests served within a certain time (ms)
+  50%      1
+  66%      1
+  75%      1
+  80%      1
+  90%      1
+  95%      1
+  98%      2
+  99%      2
+ 100%      9 (longest request)
+```
+
 ## Requirements:
 
 - [X] REST API
@@ -87,7 +147,7 @@ microservice which stores API answers and provides it's own API to get this data
 
 - [ ] WebSockets (Why? If the service can return 2-3 min old data. To discard HTTP overhead? It won't be a problem, I think)
 - [X] Clean Architecture (Uncle Bob's?)
-- [X] ? Scalability (Will do!)
+- [X] ? Scalability (Will do!) *Add Caddy server proxy with Round-Robin algorithm (https://nknv.ru/caddy-load-balancing)*
 
 ---
 

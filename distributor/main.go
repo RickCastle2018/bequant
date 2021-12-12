@@ -74,25 +74,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+
 		var raw Tsym
 		var display Tsym
-		err = json.Unmarshal([]byte(pair.Raw), &raw)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		err = json.Unmarshal([]byte(pair.Display), &display)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		json.Unmarshal([]byte(pair.Raw), &raw)
+		json.Unmarshal([]byte(pair.Display), &display)
+
 		data.RAW[pair.Fsym][pair.Tsym] = raw
 		data.DISPLAY[pair.Fsym][pair.Tsym] = display
-		// go cachePair(pair)
 	}
 
-	res, err := json.Marshal(data)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	res, _ := json.Marshal(data)
 
 	w.Header().Add("Content-Type", "application/json")
 	fmt.Fprint(w, string(res))
