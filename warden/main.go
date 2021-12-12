@@ -13,6 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var db *sqlx.DB
+
 type Fsym string
 
 type Tsym struct {
@@ -42,7 +44,7 @@ type Responce struct {
 	DISPLAY map[Fsym]map[string]Tsym
 }
 
-func updateData(db *sqlx.DB, sql string) error {
+func updateData(sql string) error {
 	fsyms := "?fsyms=" + os.Getenv("FSYMS")
 	tsyms := "&tsyms=" + os.Getenv("TSYMS")
 	url := os.Getenv("API_URL") + fsyms + tsyms
@@ -93,14 +95,15 @@ func main() {
 	log.Println("warden is starting")
 
 	url := os.Getenv("DB_USER") + ":" + os.Getenv("DB_USER_PASSWORD") + "@tcp(db)/" + os.Getenv("DB_NAME")
-	db, err := sqlx.Open("mysql", url)
+	var err error
+	db, err = sqlx.Open("mysql", url)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	_, err = db.Exec(schema)
 	if err == nil {
-		err = updateData(db, `
+		err = updateData(`
 		INSERT INTO pairs (fsym, tsym, raw, display)
 		VALUES (:fsym, :tsym, :raw, :display)
 		`)
@@ -117,7 +120,7 @@ func main() {
 	ticker := time.NewTicker(interval * time.Second)
 	for {
 		<-ticker.C
-		updateData(db, `
+		updateData(`
 			REPLACE INTO pairs (fsym, tsym, raw, display)
 			VALUES (:fsym, :tsym, :raw, :display)
 		`)

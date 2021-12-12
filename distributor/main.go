@@ -1,73 +1,77 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
-// https://stackoverflow.com/a/44403016
-func Parallelize(functions ...func()) {
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(len(functions))
-
-	defer waitGroup.Wait()
-
-	for _, function := range functions {
-		go func(copy func()) {
-			defer waitGroup.Done()
-			copy()
-		}(function)
-	}
-}
-
 var db *sqlx.DB
 
 type Pair struct {
-	fsym    string
-	tsym    string
-	raw     string
-	display string
+	Fsym    string
+	Tsym    string
+	Raw     string
+	Display string
+}
+
+type Responce struct {
+	RAW     map[string]map[string]string
+	DISPLAY map[string]map[string]string
+}
+
+func prepareParam(r *http.Request, name string) (string, []string) {
+	paramString := r.URL.Query()[name][0]
+	paramArr := strings.Split(paramString, ",")
+	param := "'" + strings.Join(paramArr, "', '") + "'"
+	return param, paramArr
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fsymsString := r.URL.Query()["fsyms"][0]
-	fsyms := strings.Split(fsymsString, ",")
+	fsyms, fsymsArr := prepareParam(r, "fsyms")
+	tsyms, _ := prepareParam(r, "tsyms")
 
-	tsymsString := r.URL.Query()["tsyms"][0]
-	tsyms := strings.Split(tsymsString, ",")
+	sql := fmt.Sprintf(`
+	SELECT * FROM pairs
+	WHERE fsym IN (%s) AND tsym IN (%s)
+	`, fsyms, tsyms)
 
-	for _, fsym := range fsyms {
-		sql := `
-		SELECT tsym, raw, display FROM pairs
-		WHERE fsym=:fsym AND tsym in (:tsyms)
-		`
-		params := map[string]interface{}{
-			"fsym":  fsym,
-			"tsyms": "'" + strings.Join(tsyms, "', '") + "'",
-		}
-		rows, err := db.NamedQuery(sql, params)
+	rows, err := db.Queryx(sql)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var data Responce
+	data.RAW = make(map[string]map[string]string)
+	data.DISPLAY = make(map[string]map[string]string)
+	for _, fsym := range fsymsArr {
+		data.RAW[fsym] = make(map[string]string)
+		data.DISPLAY[fsym] = make(map[string]string)
+	}
+
+	var pair Pair
+	for rows.Next() {
+		err := rows.StructScan(&pair)
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		var pairs []Pair
-		for rows.Next() {
-			var pair Pair
-			err := rows.StructScan(&pair)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			pairs = append(pairs, pair)
-			log.Println(pair)
-		}
-		log.Println(pairs)
+		data.RAW[pair.Fsym][pair.Tsym] = pair.Raw
+		data.DISPLAY[pair.Fsym][pair.Tsym] = pair.Display
 	}
+
+	res, err := json.Marshal(data)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprint(w, string(res))
 }
 
 func main() {
