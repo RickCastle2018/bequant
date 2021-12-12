@@ -38,7 +38,6 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_USER_PASSWORD: ${DB_USER_PASSWORD}
-      UPDATE_INTERVAL: ${UPDATE_INTERVAL}
     ports:
       - 8080:8080
     # restart: unless-stopped
