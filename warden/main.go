@@ -16,33 +16,33 @@ import (
 type Fsym string
 
 type Tsym struct {
-	TOSYMBOL        string
-	CHANGE24HOUR    string
-	CHANGEPCT24HOUR string
-	OPEN24HOUR      string
-	VOLUME24HOUR    string
-	VOLUME24HOURTO  string
-	LOW24HOUR       string
-	HIGH24HOUR      string
-	PRICE           string
-	SUPPLY          string
-	MKTCAP          string
+	CHANGE24HOUR    interface{}
+	CHANGEPCT24HOUR interface{}
+	OPEN24HOUR      interface{}
+	VOLUME24HOUR    interface{}
+	VOLUME24HOURTO  interface{}
+	LOW24HOUR       interface{}
+	HIGH24HOUR      interface{}
+	PRICE           interface{}
+	SUPPLY          interface{}
+	MKTCAP          interface{}
 }
 
 var schema = `
-CREATE TABLE IF NOT EXISTS pairs (
-    fsym varchar(10) PRIMARY KEY,
+CREATE TABLE pairs (
+    fsym varchar(10),
     tsym varchar(10),
     raw text,
-	display text
+	display text,
+	PRIMARY KEY (fsym, tsym)
 )`
 
 type Responce struct {
-	RAW     map[Fsym]Tsym
-	DISPLAY map[Fsym]Tsym
+	RAW     map[Fsym]map[string]Tsym
+	DISPLAY map[Fsym]map[string]Tsym
 }
 
-func updateData(db *sqlx.DB) {
+func updateData(db *sqlx.DB, sql string) error {
 	fsyms := "?fsyms=" + os.Getenv("FSYMS")
 	tsyms := "&tsyms=" + os.Getenv("TSYMS")
 	url := os.Getenv("API_URL") + fsyms + tsyms
@@ -65,28 +65,28 @@ func updateData(db *sqlx.DB) {
 	}
 
 	var pairMaps []map[string]interface{}
-	for fsym, tsym := range r.RAW {
-		raw, _ := json.Marshal(tsym)
-		display, _ := json.Marshal(r.DISPLAY[fsym])
-		pair := map[string]interface{}{
-			"fsym":    string(fsym),
-			"tsym":    tsym.TOSYMBOL,
-			"raw":     string(raw),
-			"display": string(display),
+	for fsym, tsyms := range r.RAW {
+		for tsym, data := range tsyms {
+			raw, _ := json.Marshal(data)
+			display, _ := json.Marshal(r.DISPLAY[fsym][tsym])
+			pair := map[string]interface{}{
+				"fsym":    string(fsym),
+				"tsym":    tsym,
+				"raw":     string(raw),
+				"display": string(display),
+			}
+			pairMaps = append(pairMaps, pair)
 		}
-		pairMaps = append(pairMaps, pair)
 	}
 
-	sql := `
-		REPLACE INTO pairs (fsym, tsym, raw, display) 
-		VALUES (:fsym, :tsym, :raw, :display)
-	`
 	_, err = db.NamedExec(sql, pairMaps)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
+		return err
 	}
 
 	log.Println("warden - pairs updated")
+	return nil
 }
 
 func main() {
@@ -97,7 +97,17 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	db.MustExec(schema)
+
+	_, err = db.Exec(schema)
+	if err == nil {
+		err = updateData(db, `
+		INSERT INTO pairs (fsym, tsym, raw, display)
+		VALUES (:fsym, :tsym, :raw, :display)
+		`)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 
 	intervalInt, err := strconv.ParseInt(os.Getenv("UPDATE_INTERVAL"), 10, 64)
 	if err != nil {
@@ -107,6 +117,9 @@ func main() {
 	ticker := time.NewTicker(interval * time.Second)
 	for {
 		<-ticker.C
-		updateData(db)
+		updateData(db, `
+			REPLACE INTO pairs (fsym, tsym, raw, display)
+			VALUES (:fsym, :tsym, :raw, :display)
+		`)
 	}
 }

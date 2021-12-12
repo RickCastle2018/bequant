@@ -16,7 +16,7 @@ Example:
 
 ```js
 Curl Request:
-curl 127.0.0.1:2311/price?fsyms=BTC&tsyms=USD
+curl 127.0.0.1:8080/price?fsyms=BTC&tsyms=USD
 
 JSON Response:
 {

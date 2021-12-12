@@ -3,26 +3,41 @@ services:
 
   db:
     image: mysql:8
-    container_name: db
+    container_name: bequant-db
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_USER_PASSWORD}
-    ports:
-      - 6033:3306
+    # ports:
+    #   - "6033:3306"
     volumes:
       - ./db/data:/var/lib/mysql
     # restart: unless-stopped
 
+  # used to debug SQL(x)
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: pma
+  #   links:
+  #     - db
+  #   environment:
+  #     PMA_HOST: db
+  #     PMA_PORT: 3306
+  #     PMA_ARBITRARY: 1
+  #   # restart: unless-stopped
+  #   ports:
+  #     - 8081:80
+
   distributor:
-    container_name: distributor
+    container_name: bequant-distributor
     build:
       context: .
       dockerfile: ./distributor/Dockerfile
-    DB_NAME: ${DB_NAME}
-    DB_USER: ${DB_USER}
-    DB_USER_PASSWORD: ${DB_USER_PASSWORD}
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_USER_PASSWORD: ${DB_USER_PASSWORD}
     ports:
       - 8080:8080
     # restart: unless-stopped
@@ -30,7 +45,7 @@ services:
       - db
 
   warden:
-    container_name: warden
+    container_name: bequant-warden
     build:
       context: .
       dockerfile: ./warden/Dockerfile
