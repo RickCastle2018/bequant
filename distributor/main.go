@@ -21,9 +21,22 @@ type Pair struct {
 	Display string
 }
 
+type Tsym struct {
+	CHANGE24HOUR    interface{}
+	CHANGEPCT24HOUR interface{}
+	OPEN24HOUR      interface{}
+	VOLUME24HOUR    interface{}
+	VOLUME24HOURTO  interface{}
+	LOW24HOUR       interface{}
+	HIGH24HOUR      interface{}
+	PRICE           interface{}
+	SUPPLY          interface{}
+	MKTCAP          interface{}
+}
+
 type Responce struct {
-	RAW     map[string]map[string]string
-	DISPLAY map[string]map[string]string
+	RAW     map[string]map[string]Tsym
+	DISPLAY map[string]map[string]Tsym
 }
 
 func prepareParam(r *http.Request, name string) (string, []string) {
@@ -48,11 +61,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data Responce
-	data.RAW = make(map[string]map[string]string)
-	data.DISPLAY = make(map[string]map[string]string)
+	data.RAW = make(map[string]map[string]Tsym)
+	data.DISPLAY = make(map[string]map[string]Tsym)
 	for _, fsym := range fsymsArr {
-		data.RAW[fsym] = make(map[string]string)
-		data.DISPLAY[fsym] = make(map[string]string)
+		data.RAW[fsym] = make(map[string]Tsym)
+		data.DISPLAY[fsym] = make(map[string]Tsym)
 	}
 
 	var pair Pair
@@ -61,8 +74,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		data.RAW[pair.Fsym][pair.Tsym] = pair.Raw
-		data.DISPLAY[pair.Fsym][pair.Tsym] = pair.Display
+		var raw Tsym
+		var display Tsym
+		err = json.Unmarshal([]byte(pair.Raw), &raw)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = json.Unmarshal([]byte(pair.Display), &display)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		data.RAW[pair.Fsym][pair.Tsym] = raw
+		data.DISPLAY[pair.Fsym][pair.Tsym] = display
+		// go cachePair(pair)
 	}
 
 	res, err := json.Marshal(data)
@@ -83,6 +107,8 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	db.SetMaxIdleConns(64)
+	db.SetMaxOpenConns(64)
 
 	http.HandleFunc("/price", handler)
 	http.ListenAndServe(":8080", nil)

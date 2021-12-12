@@ -73,21 +73,21 @@ microservice which stores API answers and provides it's own API to get this data
 
 ## Requirements:
 
-- REST API (mb, no need to use WebSockets?)
-- If Cryptocompare is not accessible service must return data from database via own API
+- [X] REST API
+- [X] If Cryptocompare is not accessible service must return data from database via own API
 (It's the purpose, or service should act just as gateway if API is accessible?)
-- Data in response must be fresh (realtime). 2-3 minutes discrepancy is ok.
+- [X] Data in response must be fresh (realtime). 2-3 minutes discrepancy is ok.
 (Again, realtime means being a gateway? I'll just do continuous caching)
-- Currency pairs should be configurable.
-- MySQL parameters should be configurable.
-- Service must store data to MySQL by sheduler (rawjson is ok).
-- Service must work in background.
+- [X] Currency pairs should be configurable.
+- [X] MySQL parameters should be configurable.
+- [X] Service must store data to MySQL by sheduler (rawjson is ok).
+- [X] Service must work in background.
 
 ## Not required, but appreciated:
 
-- WebSockets (Why? If the service can return 2-3 min old data. To discard HTTP overhead? It won't be a problem, I think)
-- Clean Architecture (Uncle Bob's?)
-- Scalability (Will do!)
+- [ ] WebSockets (Why? If the service can return 2-3 min old data. To discard HTTP overhead? It won't be a problem, I think)
+- [X] Clean Architecture (Uncle Bob's?)
+- [X] ? Scalability (Will do!)
 
 ---
 
