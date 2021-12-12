@@ -4,13 +4,15 @@
 
 Simply type `docker-compose up -d --build db warden distributor` in terminal while in project's directory.
 MySQL, Warden (updates data) and Distributor (provides API) will be started.
-Access API at `localhost:2311`.
+Access API at `localhost:8080`.
+
+Before running, create .env file based on example.env. This is the way to configure the service.
 
 ## API Description:
 
 One handle: `/price`
 
-Two params, both required: `?fsyms=CURRENCY&tsyms=CURRENCY`, where *CURRENCY* is a currency symbol (USDT, for example)
+Two params, both required: `?fsyms=CURRENCY,...&tsyms=CURRENCY,...`, where *CURRENCY* is a currency symbol (USDT, for example)
 
 Example:
 
